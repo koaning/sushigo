@@ -38,6 +38,20 @@ class Game():
             self.players[name].hand = current_hands[i - 1]
 
 
+    def play_game(self):
+        # TODO IMPLEMENT and at the end reinit
+        for turn in range(self.cards_per_player):
+            self.play_turn()
+        # if all games haven't been played yet, draw cards again
+        if self.game < self.max_games:
+            self.game +=1
+            for name in self.players.keys():
+                # if the deck is going to run out of cards: throw error
+                if len(self.deck.cards) < self.cards_per_player:
+                    raise RuntimeError("deck needs more cards for this many rounds of plays")
+                self.players[name].hand = self.deck.cards[:self.cards_per_player]
+                self.deck.cards = self.deck.cards[self.cards_per_player:]
+
 
     def calc_scores(self):
         n_pudding = [self.count_cards(p, 'pudding') for p in range(self.players)]

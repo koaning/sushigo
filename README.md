@@ -45,9 +45,9 @@ game = Game(deck=StandardDeck(), players=[p1, p2])
 This sets up the entire game. You can give it the `go` command to have it play a game. This will play a game and return a `GameResult` object. This is nice because this means you can run many simulations of the game.
 
 ```
-game_result1 = game.go()
-game_result2 = game.go()
-game_result3 = game.go()
+game_result1 = game.play_game()
+game_result2 = game.play_game()
+game_result3 = game.play_game()
 ```
 
 

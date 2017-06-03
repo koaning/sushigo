@@ -15,7 +15,8 @@ env = sushigo.make('2player')
 agent = <your custom player>
 observation = env.reset()
 while not env.game_done:
-    action = agent.act(env.state, env.action_space)
+    # how the agent will act depends on your implementation
+    action = agent.act(observation, env.action_space)
     observation, reward, done, info = env.step(action)
 ```
 
@@ -23,7 +24,32 @@ while not env.game_done:
 
 There is an internal state of the system which the agent does not get to see. All the state that is available to the agent will be passed via the observation variable.
 
-![](readme_imgs/internals1.png)
+![](/readme_imgs/internals1.png)
+
+This will be the case for games with only two players but also for multiple players.
+
+![](/readme_imgs/internals2.png)
+
+The environment object is a mere wrapper around a `Deck`, `Game`, and multiple `Player` objects.
+
+```
+from sushigo.player import RandomPlayer
+from sushigo.game import Game
+from sushigo.deck import StandardDeck
+
+p1 = RandomPlayer()
+p2 = RandomPlayer()
+game = Game(deck=StandardDeck(), players=[p1, p2])
+```
+
+This sets up the entire game. You can give it the `go` command to have it play a game. This will play a game and return a `GameResult` object. This is nice because this means you can run many simulations of the game.
+
+```
+game_result1 = game.go()
+game_result2 = game.go()
+game_result3 = game.go()
+```
+
 
 ## building/testing
 

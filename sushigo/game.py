@@ -4,14 +4,14 @@ class Game():
     def __init__(self, agents, deck=None, cards_per_player=10, n_games=3):
         if len(set([_.name for _ in agents])) != len(agents):
             raise ValueError("two players in game have the same name")
-        self.turn = 1
+        self.turn = 0
         self.game = 1
         self.max_games = n_games
         self.cards_per_player = cards_per_player
         self.deck = Deck()
         if deck:
             self.deck = deck
-        self.players = {_.name:_ for _ in agents}
+        self.players = {_.name: _ for _ in agents}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
             self.deck.cards = self.deck.cards[cards_per_player:]
@@ -22,12 +22,15 @@ class Game():
         """
         # lets play every players choice
         for player_name in self.players.keys():
-            # first we determine the card choice
-            # observation = self.player_state(player_name)
-            # action_space = self.player_action_space(player_name)
-            # TODO implement player_state and player_action_space
+            observation = self.get_observation(player_name)
+            action_space = self.get_action_space(player_name)
             player = self.players[player_name]
-            card = player.act(observation=1, action_space=player.hand)
+            # the player selects a type of card
+            card_type = player.act(observation=observation, action_space=action_space)
+            # throw error if agent returns something strange
+            if card_type not in [_.type for _ in player.hand]:
+                raise ValueError("Player {} does not have card of type {}".format(player_name, card_type))
+            card = sorted(player.hand, key=lambda _: _.type == card_type)[-1]
             # next we determine the new player_state
             player.table.append(card)
             player.hand = [c for c in player.hand if c.id != card.id]
@@ -37,20 +40,37 @@ class Game():
         for i, name in enumerate(self.players.keys()):
             self.players[name].hand = current_hands[i - 1]
 
+        # the very last thing is to update the turn
+        self.turn += 1
 
     def play_game(self):
-        # TODO IMPLEMENT and at the end reinit
         for turn in range(self.cards_per_player):
             self.play_turn()
         # if all games haven't been played yet, draw cards again
         if self.game < self.max_games:
-            self.game +=1
+            self.game += 1
             for name in self.players.keys():
                 # if the deck is going to run out of cards: throw error
                 if len(self.deck.cards) < self.cards_per_player:
                     raise RuntimeError("deck needs more cards for this many rounds of plays")
                 self.players[name].hand = self.deck.cards[:self.cards_per_player]
                 self.deck.cards = self.deck.cards[self.cards_per_player:]
+
+
+    def play_full_game(self):
+        for game in range(self.max_games):
+            self.play_game()
+
+
+    def get_action_space(self, name):
+        return [_.type for _ in self.players[name].hand]
+
+
+    def get_observation(self, name):
+        return {
+            "table": {_:self.players[_].table for _ in self.players.keys()},
+            "hand": [_.type for _ in self.players[name].hand]
+        }
 
 
     def calc_scores(self):

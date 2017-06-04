@@ -11,6 +11,9 @@ class Card():
         self.type = type
         self.id = id
 
+    def __repr__(self):
+        return "<Card id:{} type:{} @{}> at ".format(self.id, self.type, hex(id(self)))
+
 class Deck():
     def __init__(self, maki1=5, maki2=5, maki3=5, pudding=5,
                  egg=5, salmon=5, squid=5, tempura=5,

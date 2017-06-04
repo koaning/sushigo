@@ -12,7 +12,7 @@ class Card():
         self.id = id
 
     def __repr__(self):
-        return "<Card id:{} type:{} @{}> at ".format(self.id, self.type, hex(id(self)))
+        return "<Card id-in-deck:{} type:{} @{}> at ".format(self.id, self.type, hex(id(self)))
 
 class Deck():
     def __init__(self, maki1=7, maki2=7, maki3=7, pudding=8,
@@ -35,5 +35,14 @@ class Deck():
 
 class StandardDeck(Deck):
     def __init__(self):
+        """This deck will mimic the actual cardgame"""
         deck = Deck()
+        self.cards = deck.cards
+
+class InfiniDeck(Deck):
+    def __init__(self):
+        """This deck has way to many cards. Useful for testing."""
+        deck = Deck(maki1=100, maki2=100, maki3=100,
+                    pudding=100, egg=100, salmon=100,
+                    tempura=100, sashimi=100, dumpling=100, wasabi=100)
         self.cards = deck.cards

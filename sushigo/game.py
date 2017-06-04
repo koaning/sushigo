@@ -2,19 +2,20 @@ from sushigo.deck import Deck
 
 
 class Game(object):
-    def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_games=3, verbose=False):
+    def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_rounds=3, verbose=False):
         if len(set([_.name for _ in agents])) != len(agents):
             raise ValueError("two players in game have the same name")
         self.turn = 0
-        self.game = 1
+        self.round = 1
         self.verbose = verbose
-        self.max_games = n_games
+        self.max_rounds = n_rounds
         self.cards_per_player = cards_per_player
         self.deck_constructor = Deck
         if deck_constructor:
             self.deck_constructor = deck_constructor
         self.deck = self.deck_constructor()
         self.players = {_.name: _ for _ in agents}
+        self.scores = {"game-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
             self.deck.cards = self.deck.cards[cards_per_player:]
@@ -23,17 +24,19 @@ class Game(object):
         """
         This method simulates a single turn in a game.
         """
-        # lets play every players choice
         for player_name in self.players.keys():
             observation = self.get_observation(player_name)
             action_space = self.get_action_space(player_name)
             player = self.players[player_name]
+
             # the player selects a type of card
             card_type = player.act(observation=observation, action_space=action_space)
+
             # throw error if agent returns something strange
             if card_type not in [_.type for _ in player.hand]:
                 raise ValueError("Player {} does not have card of type {}".format(player_name, card_type))
             card = sorted(player.hand, key=lambda _: _.type == card_type)[-1]
+
             # next we determine the new player_state
             player.table.append(card)
             player.hand = [c for c in player.hand if c.id != card.id]
@@ -45,10 +48,11 @@ class Game(object):
 
         # the very last thing is to update the turn
         self.turn += 1
+        self.update_scores()
 
     def reset_game(self):
         self.turn = 0
-        self.game = 1
+        self.round = 1
         self.deck = self.deck_constructor()
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:self.cards_per_player]
@@ -58,8 +62,9 @@ class Game(object):
         for turn in range(self.cards_per_player):
             self.play_turn()
         # if all games haven't been played yet, draw cards again
-        if self.game < self.max_games:
-            self.game += 1
+        if self.round < self.max_rounds:
+            self.scores["game-{}".format(self.round)] = self.calc_scores()
+            self.round += 1
             for name in self.players.keys():
                 # if the deck is going to run out of cards: throw error
                 if len(self.deck.cards) < self.cards_per_player:
@@ -68,23 +73,21 @@ class Game(object):
                 self.deck.cards = self.deck.cards[self.cards_per_player:]
 
     def play_full_game(self):
-        for game in range(self.max_games):
+        for game in range(self.max_rounds):
             self.play_game()
         scores = self.calc_scores()
         self.reset_game()
         return scores
 
-
     def get_action_space(self, name):
         return [_.type for _ in self.players[name].hand]
 
-
     def get_observation(self, name):
         return {
-            "table": {_:self.players[_].table for _ in self.players.keys()},
-            "hand": [_.type for _ in self.players[name].hand]
+            "table": {_: self.players[_].table for _ in self.players.keys()},
+            "hand": [_.type for _ in self.players[name].hand],
+            "scores": self.scores
         }
-
 
     def calc_scores(self):
         n_pudding = {p: self.count_cards(p, 'pudding') for p in self.players.keys()}
@@ -97,21 +100,26 @@ class Game(object):
                      self._sashimi_score(player) +
                      self._tempura_score(player))
             # handle pudding score
-            if self.count_cards(player, 'pudding') == max(n_pudding):
-                score += 6 / sum([_ == max(n_pudding) for _ in n_pudding])
-            if self.count_cards(player, 'pudding') == min(n_pudding):
+            if self.count_cards(player, 'pudding') == max(n_pudding.values()):
+                score += 6 / sum([_ == max(n_pudding.values()) for _ in n_pudding.values()])
+            if self.count_cards(player, 'pudding') == min(n_pudding.values()):
                 if len(self.players) > 2:
-                    score -= 6 / sum([_ == min(n_pudding) for _ in n_pudding])
+                    score -= 6 / sum([_ == min(n_pudding.values()) for _ in n_pudding.values()])
             # handle best maki score
-            if self._maki_roll_count(player) == max(n_pudding):
+            if self._maki_roll_count(player) == max(n_pudding.values()):
                 score += 6 / sum([_ == max(n_maxi) for _ in n_maxi])
             # handle second best maki score
-            scores_without_best = [_ for _ in n_pudding]
+            scores_without_best = [_ for _ in n_pudding.values()]
             if len(scores_without_best) != 0:
                 if self._maki_roll_count(player) == max(scores_without_best):
                     score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])
-            score_dict[player] = score
+            score_dict[player] = float(score)
         return score_dict
+
+    def update_scores(self):
+        res = self.scores.copy()
+        res['game-{}'.format(self.round)] = self.calc_scores()
+        self.scores = res
 
     def count_cards(self, player_name, cardtype):
         return len([_ for _ in self.players[player_name].table if _.type == cardtype])

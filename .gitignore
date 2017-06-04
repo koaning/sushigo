@@ -1,0 +1,6 @@
+*.pyc
+tests/__pycache__/*
+
+build/*
+.idea/*
+.cache/*

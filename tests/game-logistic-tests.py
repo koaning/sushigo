@@ -30,7 +30,7 @@ def test_game_assigns_correct_number_of_cards_3player():
 def test_after_turn_hands_exchange_two_player():
     p1 = Player("bob")
     p2 = Player("sharon")
-    game = Game(deck_constructor=StandardDeck, agents=[p1, p2])
+    game = Game(deck_constructor=StandardDeck, agents=[p1, p2], cards_per_player=10)
     p1_hand_before, p2_hand_before = p1.hand, p2.hand
     game.play_turn()
     assert len(p1.hand) == 9
@@ -43,7 +43,7 @@ def test_after_turn_hands_exchange_three_player():
     p1 = Player("bob")
     p2 = Player("sharon")
     p3 = Player("alice")
-    game = Game(deck_constructor=StandardDeck, agents=[p1, p2, p3])
+    game = Game(deck_constructor=StandardDeck, agents=[p1, p2, p3], cards_per_player=10)
     p1_hand_before, p2_hand_before, p3_hand_before = p1.hand, p2.hand, p3.hand
     game.play_turn()
     assert len(p1.hand) == 9
@@ -57,7 +57,7 @@ def test_after_turn_hands_exchange_three_player():
 def test_after_game_players_have_no_cards():
     p1 = Player("bob")
     p2 = Player("sharon")
-    game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_games=1)
+    game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=1)
     game.play_game()
     assert len(p1.hand) == 0
     assert len(p2.hand) == 0
@@ -66,8 +66,22 @@ def test_after_game_players_have_no_cards():
 def test_turns_update():
     p1 = Player("bob")
     p2 = Player("sharon")
-    game1 = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_games=2)
-    game1.play_game()
-    assert game1.turn == 10
-    game1.play_game()
-    assert game1.turn == 20
+    game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2)
+    game.play_game()
+    assert game.turn == 10
+    game.play_game()
+    assert game.turn == 20
+
+
+def test_interal_game_reset_functionality():
+    p1 = Player("bob")
+    p2 = Player("sharon")
+    game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2, cards_per_player=10)
+    game.play_game()
+    assert game.turn == 10
+    game.play_game()
+    assert game.turn == 20
+    game.reset_game()
+    assert game.turn == 0
+    assert len(p1.hand) == 10
+    assert len(p2.hand) == 10

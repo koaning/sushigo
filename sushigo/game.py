@@ -1,16 +1,19 @@
 from sushigo.deck import Deck
 
-class Game():
-    def __init__(self, agents, deck=None, cards_per_player=10, n_games=3):
+
+class Game(object):
+    def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_games=3, verbose=False):
         if len(set([_.name for _ in agents])) != len(agents):
             raise ValueError("two players in game have the same name")
         self.turn = 0
         self.game = 1
+        self.verbose = verbose
         self.max_games = n_games
         self.cards_per_player = cards_per_player
-        self.deck = Deck()
-        if deck:
-            self.deck = deck
+        self.deck_constructor = Deck
+        if deck_constructor:
+            self.deck_constructor = deck_constructor
+        self.deck = self.deck_constructor()
         self.players = {_.name: _ for _ in agents}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
@@ -43,6 +46,14 @@ class Game():
         # the very last thing is to update the turn
         self.turn += 1
 
+    def reset_game(self):
+        self.turn = 0
+        self.game = 1
+        self.deck = self.deck_constructor()
+        for name in self.players.keys():
+            self.players[name].hand = self.deck.cards[:self.cards_per_player]
+            self.deck.cards = self.deck.cards[self.cards_per_player:]
+
     def play_game(self):
         for turn in range(self.cards_per_player):
             self.play_turn()
@@ -52,14 +63,16 @@ class Game():
             for name in self.players.keys():
                 # if the deck is going to run out of cards: throw error
                 if len(self.deck.cards) < self.cards_per_player:
-                    raise RuntimeError("deck needs more cards for this many rounds of plays")
+                    raise RuntimeError("Deck needs more cards for this many rounds of plays")
                 self.players[name].hand = self.deck.cards[:self.cards_per_player]
                 self.deck.cards = self.deck.cards[self.cards_per_player:]
-
 
     def play_full_game(self):
         for game in range(self.max_games):
             self.play_game()
+        scores = self.calc_scores()
+        self.reset_game()
+        return scores
 
 
     def get_action_space(self, name):
@@ -74,10 +87,10 @@ class Game():
 
 
     def calc_scores(self):
-        n_pudding = [self.count_cards(p, 'pudding') for p in range(self.players)]
-        n_maxi = [self._maki_roll_count(p) for p in range(self.players)]
+        n_pudding = {p: self.count_cards(p, 'pudding') for p in self.players.keys()}
+        n_maxi = {p: self._maki_roll_count(p) for p in self.players.keys()}
         score_dict = {}
-        for player in range(self.players):
+        for player in self.players.keys():
             # handle simple scores
             score = (self._nigiri_score(player) +
                      self._nigiri_score(player) +
@@ -97,20 +110,20 @@ class Game():
             if len(scores_without_best) != 0:
                 if self._maki_roll_count(player) == max(scores_without_best):
                     score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])
-            score_dict[player.name] = score
+            score_dict[player] = score
         return score_dict
 
-    def count_cards(self, player_id, cardtype):
-        return len([_ for _ in self.players[player_id].table if _.type == cardtype])
+    def count_cards(self, player_name, cardtype):
+        return len([_ for _ in self.players[player_name].table if _.type == cardtype])
 
     def _maki_roll_count(self, player_id):
         score_map = {'maki-1': 1, 'maki-2': 2, 'maki-3': 3}
         return sum([score_map[_.type] for _ in self.players[player_id].table if _.type in score_map.keys()])
 
-    def _nigiri_score(self, player_id):
+    def _nigiri_score(self, player_name):
         nigiri_score = 0
         multiplier = 1
-        for card in self.players[player_id].table:
+        for card in self.players[player_name].table:
             if card.type == 'wasabi':
                 multiplier = 3
             if card.type == 'egg-nigiri':
@@ -124,15 +137,16 @@ class Game():
                 multiplier = 1
         return nigiri_score
 
-    def _dumpling_score(self, player_id):
+    def _dumpling_score(self, player_name):
+        # TODO: what if the player receives 6 of these cards?
         score_map = {1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
-        n_dumplings = self.count_cards(player_id, 'dumpling')
+        n_dumplings = self.count_cards(player_name, 'dumpling')
         return score_map[n_dumplings]
 
-    def _tempura_score(self, player_id):
-        n_tempura = self.count_cards(player_id, 'tempura')
+    def _tempura_score(self, player_name):
+        n_tempura = self.count_cards(player_name, 'tempura')
         return round(n_tempura/2)*5
 
-    def _sashimi_score(self, player_id):
-        n_sashimi = self.count_cards(player_id, 'sashimi')
+    def _sashimi_score(self, player_name):
+        n_sashimi = self.count_cards(player_name, 'sashimi')
         return round(n_sashimi/3)*10

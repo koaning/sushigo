@@ -2,7 +2,7 @@ import random
 
 ALL_CARDTYPES = ["maki-1","maki-2","maki-3","pudding",
                  "egg-nigiri","salmon-nigiri","squid-nigiri",
-                 "tempura","sashimi","dumpling"]
+                 "tempura","sashimi","dumpling","wasabi"]
 
 class Card():
     def __init__(self, type, id):
@@ -15,9 +15,9 @@ class Card():
         return "<Card id:{} type:{} @{}> at ".format(self.id, self.type, hex(id(self)))
 
 class Deck():
-    def __init__(self, maki1=5, maki2=5, maki3=5, pudding=5,
-                 egg=5, salmon=5, squid=5, tempura=5,
-                 sashimi=5, dumpling=5, chopsticks=5):
+    def __init__(self, maki1=7, maki2=7, maki3=7, pudding=8,
+                 egg=6, salmon=6, squid=5, tempura=10,
+                 sashimi=10, dumpling=15, wasabi=4):
         string_list = (['maki-1'] * maki1 +
                        ['maki-2'] * maki2 +
                        ['maki-3'] * maki3 +
@@ -27,7 +27,8 @@ class Deck():
                        ['squid-nigiri'] * squid +
                        ['tempura'] * tempura +
                        ['sashimi'] *  sashimi +
-                       ['dumpling'] * dumpling)
+                       ['dumpling'] * dumpling +
+                       ['wasabi'] * wasabi)
         card_list = [Card(type=_, id=i) for i,_ in enumerate(string_list)]
         random.shuffle(card_list)
         self.cards = card_list

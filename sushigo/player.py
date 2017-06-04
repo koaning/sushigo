@@ -3,7 +3,7 @@ import random
 
 class Player():
     def __init__(self, name=None):
-        self.name = str(uuid.uuid4())[:6]
+        self.name = 'random-player-{}'.format(str(uuid.uuid4())[:4])
         if name:
            self.name = name
         self.table = []
@@ -14,3 +14,23 @@ class Player():
             raise ValueError("player received an empty set of actions")
         return random.choice(action_space)
 
+    def __repr__(self):
+        return "<sushio.player.Player name={} at {}>".format(self.name, hex(id(self)))
+
+
+class OrderedPlayer(Player):
+    def __init__(self, name=None):
+        super(OrderedPlayer, self).__init__()
+        self.name = 'ordered-player-{}'.format(str(uuid.uuid4())[:4])
+        if name:
+            self.name = name
+
+    def act(self, action_space, observation=None):
+        cardtypes = ["pudding", "squid-nigiri", "maki-3",
+                     "maki-2", "maki-1", "salmon-nigiri",
+                     "egg-nigiri", "tempura", "sashimi",
+                     "dumpling", "wasabi"]
+
+        preference_dict = {t: i for i,t in enumerate(cardtypes)}
+
+        return sorted(action_space, key = lambda _: preference_dict[_])[0]

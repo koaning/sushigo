@@ -1,4 +1,7 @@
 from sushigo.deck import Deck
+import pprint
+
+pp = pprint.PrettyPrinter(indent=2)
 
 
 class Game(object):
@@ -49,16 +52,21 @@ class Game(object):
         # the very last thing is to update the turn
         self.turn += 1
         self.update_scores()
+        if self.verbose:
+            res = self.scores.copy()
+            res["turn"] = self.turn
+            pp.pprint(res)
 
     def reset_game(self):
         self.turn = 0
         self.round = 1
         self.deck = self.deck_constructor()
+        self.scores = {"game-{}".format(i): {_: 0. for _ in self.players.keys()} for i in range(1, self.max_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:self.cards_per_player]
             self.deck.cards = self.deck.cards[self.cards_per_player:]
 
-    def play_game(self):
+    def play_round(self):
         for turn in range(self.cards_per_player):
             self.play_turn()
         # if all games haven't been played yet, draw cards again
@@ -74,8 +82,12 @@ class Game(object):
 
     def play_full_game(self):
         for game in range(self.max_rounds):
-            self.play_game()
-        scores = self.calc_scores()
+            self.play_round()
+        scores = self.calc_scores().copy()
+        return scores
+
+    def simulate_game(self):
+        scores = self.play_full_game()
         self.reset_game()
         return scores
 

@@ -58,7 +58,7 @@ def test_after_game_players_have_no_cards():
     p1 = Player("bob")
     p2 = Player("sharon")
     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=1)
-    game.play_game()
+    game.play_round()
     assert len(p1.hand) == 0
     assert len(p2.hand) == 0
 
@@ -67,9 +67,9 @@ def test_turns_update():
     p1 = Player("bob")
     p2 = Player("sharon")
     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2)
-    game.play_game()
+    game.play_round()
     assert game.turn == 10
-    game.play_game()
+    game.play_round()
     assert game.turn == 20
 
 
@@ -77,9 +77,9 @@ def test_interal_game_reset_functionality():
     p1 = Player("bob")
     p2 = Player("sharon")
     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2, cards_per_player=10)
-    game.play_game()
+    game.play_round()
     assert game.turn == 10
-    game.play_game()
+    game.play_round()
     assert game.turn == 20
     game.reset_game()
     assert game.turn == 0

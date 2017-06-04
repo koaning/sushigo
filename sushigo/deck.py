@@ -12,7 +12,7 @@ class Card():
         self.id = id
 
     def __repr__(self):
-        return "<Card id-in-deck:{} type:{} @{}> at ".format(self.id, self.type, hex(id(self)))
+        return "<sushigo.dec.Card id-in-deck:{} type:{} @{}> at ".format(self.id, self.type, hex(id(self)))
 
 class Deck():
     def __init__(self, maki1=7, maki2=7, maki3=7, pudding=8,

@@ -53,6 +53,7 @@ def test_after_turn_hands_exchange_three_player():
     assert all([(_ in p2_hand_before) for _ in p3.hand])
     assert all([(_ in p1_hand_before) for _ in p2.hand])
 
+
 def test_after_game_players_have_no_cards():
     p1 = Player("bob")
     p2 = Player("sharon")
@@ -61,3 +62,12 @@ def test_after_game_players_have_no_cards():
     assert len(p1.hand) == 0
     assert len(p2.hand) == 0
 
+
+def test_turns_update():
+    p1 = Player("bob")
+    p2 = Player("sharon")
+    game1 = Game(deck=StandardDeck(), agents=[p1, p2], n_games=2)
+    game1.play_game()
+    assert game1.turn == 10
+    game1.play_game()
+    assert game1.turn == 20

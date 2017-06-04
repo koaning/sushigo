@@ -4,7 +4,7 @@ from sushigo.deck import Deck, StandardDeck
 def test_standard_deck_has_all_cards():
     cardtypes = ["maki-1","maki-2","maki-3","pudding",
                  "egg-nigiri","salmon-nigiri","squid-nigiri",
-                 "tempura","sashimi","dumpling"]
+                 "tempura","sashimi","dumpling","wasabi"]
     deck_cardtypes = [_.type for _ in StandardDeck().cards]
     for cardtype in deck_cardtypes:
         assert cardtype in cardtypes

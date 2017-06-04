@@ -1,5 +1,8 @@
 *.pyc
-tests/__pycache__/*
+*/*/*.pyc
+*/*/*/*.pyc
+
+sushigo/__pycache__/*.*
 
 build/*
 .idea/*

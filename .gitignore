@@ -7,3 +7,5 @@ sushigo/__pycache__/*.*
 build/*
 .idea/*
 .cache/*
+
+*.iml

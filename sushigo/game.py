@@ -18,7 +18,7 @@ class Game(object):
             self.deck_constructor = deck_constructor
         self.deck = self.deck_constructor()
         self.players = {_.name: _ for _ in agents}
-        self.scores = {"game-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
+        self.scores = {"round-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
             self.deck.cards = self.deck.cards[cards_per_player:]
@@ -61,7 +61,7 @@ class Game(object):
         self.turn = 0
         self.round = 1
         self.deck = self.deck_constructor()
-        self.scores = {"game-{}".format(i): {_: 0. for _ in self.players.keys()} for i in range(1, self.max_rounds + 1)}
+        self.scores = {"round-{}".format(i): {_: 0. for _ in self.players.keys()} for i in range(1, self.max_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:self.cards_per_player]
             self.deck.cards = self.deck.cards[self.cards_per_player:]
@@ -71,7 +71,7 @@ class Game(object):
             self.play_turn()
         # if all games haven't been played yet, draw cards again
         if self.round < self.max_rounds:
-            self.scores["game-{}".format(self.round)] = self.calc_scores()
+            self.scores["round-{}".format(self.round)] = self.calc_scores()
             self.round += 1
             for name in self.players.keys():
                 # if the deck is going to run out of cards: throw error
@@ -130,7 +130,7 @@ class Game(object):
 
     def update_scores(self):
         res = self.scores.copy()
-        res['game-{}'.format(self.round)] = self.calc_scores()
+        res['round-{}'.format(self.round)] = self.calc_scores()
         self.scores = res
 
     def count_cards(self, player_name, cardtype):

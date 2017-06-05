@@ -25,7 +25,9 @@ class OrderedPlayer(Player):
         if name:
             self.name = name
 
-    def act(self, action_space, observation=None):
+    def act(self, observation=None, action_space=None):
+        if not action_space:
+            raise ValueError("player received an empty set of actions")
         cardtypes = ["pudding", "squid-nigiri", "maki-3",
                      "maki-2", "maki-1", "salmon-nigiri",
                      "egg-nigiri", "tempura", "sashimi",

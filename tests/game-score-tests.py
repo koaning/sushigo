@@ -15,10 +15,10 @@ def test_after_turn_hands_exchange_two_player():
     scores2 = game.scores
     print(scores1)
     print(scores2)
-    assert scores0['game-1']['bob'] == 0.0
-    assert scores1['game-2']['bob'] == 0.0
-    assert scores2['game-2']['bob'] > 0.0
-    assert scores2['game-2']['sharon'] > 0.0
+    assert scores0['round-1']['bob'] == 0.0
+    assert scores1['round-2']['bob'] == 0.0
+    assert scores2['round-2']['bob'] > 0.0
+    assert scores2['round-2']['sharon'] > 0.0
 
 def test_after_turn_hands_exchange_three_player():
     p1 = Player("bob")
@@ -32,10 +32,10 @@ def test_after_turn_hands_exchange_three_player():
     scores2 = game.scores
     game.play_round()
     scores3 = game.scores
-    assert scores3['game-1']['bob'] == scores1['game-1']['bob']
-    assert scores3['game-2']['alice'] > scores0['game-2']['alice']
-    assert scores3['game-2']['bob'] > scores1['game-2']['bob']
-    assert scores3['game-2']['sharon'] > scores1['game-2']['alice']
+    assert scores3['round-1']['bob'] == scores1['round-1']['bob']
+    assert scores3['round-2']['alice'] > scores0['round-2']['alice']
+    assert scores3['round-2']['bob'] > scores1['round-2']['bob']
+    assert scores3['round-2']['sharon'] > scores1['round-2']['alice']
 
 def test_game_reset_handles_scores_well():
     p1 = Player("bob")
@@ -46,4 +46,4 @@ def test_game_reset_handles_scores_well():
     print(game.scores)
     game.reset_game()
     print(game.scores)
-    assert game.scores['game-1']['bob'] == 0.0
+    assert game.scores['round-1']['bob'] == 0.0

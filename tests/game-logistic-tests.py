@@ -68,9 +68,9 @@ def test_turns_update():
     p2 = Player("sharon")
     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2)
     game.play_round()
-    assert game.turn == 10
+    assert game.turn == 11
     game.play_round()
-    assert game.turn == 20
+    assert game.turn == 21
 
 
 def test_interal_game_reset_functionality():
@@ -78,10 +78,24 @@ def test_interal_game_reset_functionality():
     p2 = Player("sharon")
     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2, cards_per_player=10)
     game.play_round()
-    assert game.turn == 10
+    assert game.turn == 11
     game.play_round()
-    assert game.turn == 20
+    assert game.turn == 21
     game.reset_game()
     assert game.turn == 0
     assert len(p1.hand) == 10
     assert len(p2.hand) == 10
+
+
+# def test_simulated_games_should_be_distinct():
+#     p1 = Player("bob")
+#     p2 = Player("sharon")
+#     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2, cards_per_player=10)
+#     result1 = game.simulate_game()
+#     result2 = game.simulate_game()
+#     result3 = game.simulate_game()
+#     result4 = game.simulate_game()
+#     result5 = game.simulate_game()
+#     print(result5[['action', 'player', 'round', 'reward']])
+#     assert result5['bob'] < 100
+#     assert result5['sharon'] < 100

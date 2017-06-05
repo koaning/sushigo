@@ -19,19 +19,21 @@ class Player():
 
 
 class OrderedPlayer(Player):
-    def __init__(self, name=None):
+    def __init__(self, name=None, order=None):
         super(OrderedPlayer, self).__init__()
         self.name = 'ordered-player-{}'.format(str(uuid.uuid4())[:4])
         if name:
             self.name = name
+        self.order = ["pudding", "squid-nigiri", "maki-3",
+                     "tempura", "salmon-nigiri", "dumpling", "maki-2",
+                     "maki-1", "egg-nigiri", "sashimi", "wasabi"]
+        if order:
+            if any([(_ not in order) for _ in self.order]):
+                raise ValueError("forgot card type in OrderedPlayer init")
+            self.order = order
 
     def act(self, reward, observation=None, action_space=None):
         if not action_space:
             raise ValueError("player received an empty set of actions")
-        cardtypes = ["pudding", "squid-nigiri", "maki-3",
-                     "tempura", "salmon-nigiri", "dumpling", "maki-2",
-                     "maki-1", "egg-nigiri", "sashimi", "wasabi"]
-
-        preference_dict = {t: i for i,t in enumerate(cardtypes)}
-
+        preference_dict = {t: i for i,t in enumerate(self.order)}
         return sorted(action_space, key = lambda _: preference_dict[_])[0]

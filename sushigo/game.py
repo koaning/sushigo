@@ -13,7 +13,7 @@ class Game(object):
     def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_rounds=3, verbose=False):
         if len(set([_.name for _ in agents])) != len(agents):
             raise ValueError("two players in game have the same name")
-        self.turn = 0
+        self.turn = 1
         self.round = 1
         self.verbose = verbose
         self.max_rounds = n_rounds
@@ -25,30 +25,36 @@ class Game(object):
         self.players = {_.name: _ for _ in agents}
         self.game_id = str(uuid.uuid4())[:6]
         self.gamelog = pd.DataFrame({
-            "game_id":[],
-            "round":[],
-            "turn":[],
-            "player":[],
-            "action":[],
-            "score":[],
-            "datetime":[]})
+            "game_id":self.game_id,
+            "round":0,
+            "turn":0,
+            "player": list(self.players.keys()),
+            "action":'',
+            "reward":0,
+            "datetime":str(datetime.datetime.now())})
         self.scores = {"round-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
             self.deck.cards = self.deck.cards[cards_per_player:]
 
     def log_user_action(self, player_name, action):
+        """
+        This method appends to the log dataframe found in self.gamelog 
+        :param player: player object, not player-name 
+        :param action: action, card type string 
+        """
         log = pd.DataFrame({
             'game_id': [self.game_id],
             'round': self.round,
             'turn': self.turn,
             'player': player_name,
             'action': action,
-            'score': self.calc_scores()[player_name],
+            'reward': self.calc_reward(player_name),
             'datetime': str(datetime.datetime.now())
         })
-        self.gamelog = pd.concat([self.gamelog, log], ignore_index=True)
-
+        df = pd.concat([self.gamelog, log], ignore_index=True).sort_values(['player', 'turn'])
+        df['reward'] = df.groupby(['player'])['reward'].apply(lambda _: _.cumsum())
+        self.gamelog = df
 
     def play_turn(self):
         """
@@ -57,7 +63,8 @@ class Game(object):
         for player_name in self.players.keys():
             observation = self.get_observation(player_name)
             action_space = self.get_action_space(player_name)
-            reward = self.scores["round-{}".format(self.round)][player_name]
+            last_log_player = self.gamelog[self.gamelog['player'] == player_name]
+            reward = last_log_player['reward'].iloc[-1]
             player = self.players[player_name]
 
             # the player selects a type of card
@@ -91,6 +98,7 @@ class Game(object):
     def reset_game(self):
         self.turn = 0
         self.round = 1
+        self.game_id = str(uuid.uuid4())[:6]
         self.deck = self.deck_constructor()
         self.scores = {"round-{}".format(i): {_: 0. for _ in self.players.keys()} for i in range(1, self.max_rounds + 1)}
         for name in self.players.keys():
@@ -111,52 +119,73 @@ class Game(object):
                 self.players[name].hand = self.deck.cards[:self.cards_per_player]
                 self.deck.cards = self.deck.cards[self.cards_per_player:]
 
-    def play_full_game(self):
+    def simulate_game(self):
+        """
+        This method simulates a single game and resets it. 
+        :return: 
+        """
         for game in range(self.max_rounds):
             self.play_round()
-        scores = self.calc_scores().copy()
-        return scores
-
-    def simulate_game(self):
-        scores = self.play_full_game()
         self.reset_game()
-        return scores
+        return self.gamelog
 
-    def get_action_space(self, name):
-        return [_.type for _ in self.players[name].hand]
+    def get_action_space(self, player_name):
+        return [_.type for _ in self.players[player_name].hand]
 
-    def get_observation(self, name):
+    def get_observation(self, player_name):
         return {
             "table": {_: self.players[_].table for _ in self.players.keys()},
-            "hand": [_.type for _ in self.players[name].hand],
+            "hand": [_.type for _ in self.players[player_name].hand],
             "scores": self.scores
         }
 
+    def calc_reward(self, player_name):
+        """
+        This method calculates the direct reward of a player at the 
+        time of the method call. This method can be called whenever 
+        and will fall back to self.calc_scores if it is the end of 
+        the round.
+        :return: float
+        """
+        player = self.players[player_name]
+        if self.turn % self.cards_per_player == 0:
+            print("i am now at modulo 0! {}".format(self.calc_scores()))
+            return self.calc_scores()[player_name]
+        return (self._nigiri_score(player_name) +
+                self._nigiri_score(player_name) +
+                self._sashimi_score(player_name) +
+                self._tempura_score(player_name))
+
     def calc_scores(self):
+        """
+        This method calculates the score of all players.
+        This method should only be called at the end of a round.
+        :return: dict with player-name: scores for current round.
+        """
         n_pudding = {p: self.count_cards(p, 'pudding') for p in self.players.keys()}
         n_maxi = {p: self._maki_roll_count(p) for p in self.players.keys()}
         score_dict = {}
-        for player in self.players.keys():
+        for player_name in self.players.keys():
             # handle simple scores
-            score = (self._nigiri_score(player) +
-                     self._nigiri_score(player) +
-                     self._sashimi_score(player) +
-                     self._tempura_score(player))
+            score = (self._nigiri_score(player_name) +
+                     self._nigiri_score(player_name) +
+                     self._sashimi_score(player_name) +
+                     self._tempura_score(player_name))
             # handle pudding score
-            if self.count_cards(player, 'pudding') == max(n_pudding.values()):
+            if self.count_cards(player_name, 'pudding') == max(n_pudding.values()):
                 score += 6 / sum([_ == max(n_pudding.values()) for _ in n_pudding.values()])
-            if self.count_cards(player, 'pudding') == min(n_pudding.values()):
+            if self.count_cards(player_name, 'pudding') == min(n_pudding.values()):
                 if len(self.players) > 2:
                     score -= 6 / sum([_ == min(n_pudding.values()) for _ in n_pudding.values()])
             # handle best maki score
-            if self._maki_roll_count(player) == max(n_pudding.values()):
+            if self._maki_roll_count(player_name) == max(n_pudding.values()):
                 score += 6 / sum([_ == max(n_maxi) for _ in n_maxi])
             # handle second best maki score
             scores_without_best = [_ for _ in n_pudding.values()]
             if len(scores_without_best) != 0:
-                if self._maki_roll_count(player) == max(scores_without_best):
+                if self._maki_roll_count(player_name) == max(scores_without_best):
                     score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])
-            score_dict[player] = float(score)
+            score_dict[player_name] = float(score)
         return score_dict
 
     def update_scores(self):

@@ -40,8 +40,8 @@ class Game(object):
     def log_user_action(self, player_name, action):
         log = pd.DataFrame({
             'game_id': [self.game_id],
-            'round': self.round,
-            'turn': self.turn,
+            'round': int(self.round),
+            'turn': int(self.turn),
             'player': player_name,
             'action': action,
             'score': self.calc_scores()[player_name],
@@ -122,15 +122,18 @@ class Game(object):
         self.reset_game()
         return scores
 
-    def get_action_space(self, name):
-        return [_.type for _ in self.players[name].hand]
+    def get_action_space(self, player_name):
+        return [_.type for _ in self.players[player_name].hand]
 
-    def get_observation(self, name):
+    def get_observation(self, player_name):
         return {
             "table": {_: self.players[_].table for _ in self.players.keys()},
-            "hand": [_.type for _ in self.players[name].hand],
+            "hand": [_.type for _ in self.players[player_name].hand],
             "scores": self.scores
         }
+
+    def get_all_observations(self):
+        return [self.get_observation(p) for p in self.players.keys()]
 
     def calc_scores(self):
         n_pudding = {p: self.count_cards(p, 'pudding') for p in self.players.keys()}

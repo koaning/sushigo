@@ -30,10 +30,13 @@ class Game(object):
         for player_name in self.players.keys():
             observation = self.get_observation(player_name)
             action_space = self.get_action_space(player_name)
+            reward = self.scores["round-{}".format(self.round)][player_name]
             player = self.players[player_name]
 
             # the player selects a type of card
-            card_type = player.act(observation=observation, action_space=action_space)
+            card_type = player.act(reward=reward,
+                                   observation=observation,
+                                   action_space=action_space)
 
             # throw error if agent returns something strange
             if card_type not in [_.type for _ in player.hand]:

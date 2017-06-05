@@ -9,7 +9,7 @@ class Player():
         self.table = []
         self.hand = []
 
-    def act(self, observation=None, action_space=None):
+    def act(self, reward, observation=None, action_space=None):
         if not action_space:
             raise ValueError("player received an empty set of actions")
         return random.choice(action_space)
@@ -25,13 +25,12 @@ class OrderedPlayer(Player):
         if name:
             self.name = name
 
-    def act(self, observation=None, action_space=None):
+    def act(self, reward, observation=None, action_space=None):
         if not action_space:
             raise ValueError("player received an empty set of actions")
         cardtypes = ["pudding", "squid-nigiri", "maki-3",
-                     "maki-2", "maki-1", "salmon-nigiri",
-                     "egg-nigiri", "tempura", "sashimi",
-                     "dumpling", "wasabi"]
+                     "tempura", "salmon-nigiri", "dumpling", "maki-2",
+                     "maki-1", "egg-nigiri", "sashimi", "wasabi"]
 
         preference_dict = {t: i for i,t in enumerate(cardtypes)}
 

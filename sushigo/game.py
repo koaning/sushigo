@@ -13,7 +13,7 @@ class Game(object):
     def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_rounds=3, verbose=False):
         if len(set([_.name for _ in agents])) != len(agents):
             raise ValueError("two players in game have the same name")
-        self.turn = 0
+        self.turn = 1
         self.round = 1
         self.verbose = verbose
         self.max_rounds = n_rounds

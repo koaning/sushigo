@@ -1,8 +1,13 @@
 from sushigo.deck import Deck
+import pandas as pd
+import datetime
+import uuid
 import pprint
 
 pp = pprint.PrettyPrinter(indent=2)
 
+# logging -
+# game_id, round, turn, player, action, score, datetime
 
 class Game(object):
     def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_rounds=3, verbose=False):
@@ -18,10 +23,32 @@ class Game(object):
             self.deck_constructor = deck_constructor
         self.deck = self.deck_constructor()
         self.players = {_.name: _ for _ in agents}
+        self.game_id = str(uuid.uuid4())[:6]
+        self.gamelog = pd.DataFrame({
+            "game_id":[],
+            "round":[],
+            "turn":[],
+            "player":[],
+            "action":[],
+            "score":[],
+            "datetime":[]})
         self.scores = {"round-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
             self.deck.cards = self.deck.cards[cards_per_player:]
+
+    def log_user_action(self, player_name, action):
+        log = pd.DataFrame({
+            'game_id': [self.game_id],
+            'round': self.round,
+            'turn': self.turn,
+            'player': player_name,
+            'action': action,
+            'score': self.calc_scores()[player_name],
+            'datetime': str(datetime.datetime.now())
+        })
+        self.gamelog = pd.concat([self.gamelog, log], ignore_index=True)
+
 
     def play_turn(self):
         """
@@ -30,10 +57,13 @@ class Game(object):
         for player_name in self.players.keys():
             observation = self.get_observation(player_name)
             action_space = self.get_action_space(player_name)
+            reward = self.scores["round-{}".format(self.round)][player_name]
             player = self.players[player_name]
 
             # the player selects a type of card
-            card_type = player.act(observation=observation, action_space=action_space)
+            card_type = player.act(reward=reward,
+                                   observation=observation,
+                                   action_space=action_space)
 
             # throw error if agent returns something strange
             if card_type not in [_.type for _ in player.hand]:
@@ -43,6 +73,7 @@ class Game(object):
             # next we determine the new player_state
             player.table.append(card)
             player.hand = [c for c in player.hand if c.id != card.id]
+            self.log_user_action(player_name=player_name, action=card_type)
 
         # last thing we need to do is ensure that everybody switches hand
         current_hands = [p.hand for p in self.players.values()]

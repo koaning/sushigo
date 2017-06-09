@@ -174,10 +174,10 @@ class Game(object):
                 if len(self.players) > 2:
                     score -= 6 / sum([_ == min(n_pudding.values()) for _ in n_pudding.values()])
             # handle best maki score
-            if self._maki_roll_count(player_name) == max(n_pudding.values()):
+            if self._maki_roll_count(player_name) == max(n_maxi.values()):
                 score += 6 / sum([_ == max(n_maxi) for _ in n_maxi])
             # handle second best maki score
-            scores_without_best = [_ for _ in n_pudding.values()]
+            scores_without_best = [_ for _ in n_maxi.values() if _ != max(n_maxi.values())]
             if len(scores_without_best) != 0:
                 if self._maki_roll_count(player_name) == max(scores_without_best):
                     score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])

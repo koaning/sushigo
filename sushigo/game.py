@@ -29,8 +29,8 @@ class Game(object):
             "player": list(self.players.keys()),
             "action": '',
             "reward": 0,
-            "reward_cs": 0,
-            "datetime": str(datetime.datetime.now())})
+            "datetime": str(datetime.datetime.now())[:19]
+        })
         self.scores = {"round-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
@@ -49,10 +49,10 @@ class Game(object):
             'player': player_name,
             'action': action,
             'reward': self.calc_reward(player_name),
-            'datetime': str(datetime.datetime.now())
+            'datetime': str(datetime.datetime.now())[:19]
         })
         df = pd.concat([self.gamelog, log], ignore_index=True).sort_values(['player', 'turn'])
-        df['reward_cs'] = df.groupby(['player'])['reward'].apply(lambda _: _.cumsum())
+        # df['reward_cs'] = df.groupby(['player'])['reward'].apply(lambda _: _.cumsum())
         self.gamelog = df
 
     def play_turn(self):
@@ -121,7 +121,7 @@ class Game(object):
     def simulate_game(self):
         """
         This method simulates a single game and resets it. 
-        :return: 
+        :return:    
         """
         for game in range(self.max_rounds):
             self.play_round()
@@ -148,10 +148,8 @@ class Game(object):
         """
         player = self.players[player_name]
         if self.turn % self.cards_per_player == 0:
-            print("i am now at modulo 0! {}".format(self.calc_scores()))
             return self.calc_scores()[player_name]
         return (self._nigiri_score(player_name) +
-                self._nigiri_score(player_name) +
                 self._sashimi_score(player_name) +
                 self._tempura_score(player_name))
 
@@ -167,7 +165,6 @@ class Game(object):
         for player_name in self.players.keys():
             # handle simple scores
             score = (self._nigiri_score(player_name) +
-                     self._nigiri_score(player_name) +
                      self._sashimi_score(player_name) +
                      self._tempura_score(player_name))
             # handle pudding score

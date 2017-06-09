@@ -1,4 +1,5 @@
 from sushigo.deck import Deck
+import numpy as np
 import pandas as pd
 import datetime
 import uuid
@@ -31,7 +32,7 @@ class Game(object):
             "reward": 0,
             "datetime": str(datetime.datetime.now())[:19]
         })
-        self.scores = {"round-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
+        self.scores = {"round-{}".format(i): {_.name: 0.0 for _ in agents} for i in range(0, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
             self.deck.cards = self.deck.cards[cards_per_player:]
@@ -52,7 +53,10 @@ class Game(object):
             'datetime': str(datetime.datetime.now())[:19]
         })
         df = pd.concat([self.gamelog, log], ignore_index=True).sort_values(['player', 'turn'])
-        # df['reward_cs'] = df.groupby(['player'])['reward'].apply(lambda _: _.cumsum())
+        # df['reward_cs'] = (df
+        #                    .groupby(['player'])['reward']
+        #                    .apply(lambda _: _.shift()))
+        # df['reward_cs'] = (df['reward_cs']).fillna(0)
         self.gamelog = df
 
     def play_turn(self):
@@ -86,9 +90,14 @@ class Game(object):
         for i, name in enumerate(self.players.keys()):
             self.players[name].hand = current_hands[i - 1]
 
+        # if this is the last turn of the round we want to remove the table
+        if self.turn % self.cards_per_player == 0:
+            self.calc_scores()
+            for name in self.players.keys():
+                self.players[name].table = []
         # the very last thing is to update the turn
         self.turn += 1
-        self.update_scores()
+
         if self.verbose:
             res = self.scores.copy()
             res["turn"] = self.turn
@@ -146,17 +155,24 @@ class Game(object):
         the round.
         :return: float
         """
-        player = self.players[player_name]
+        df = self.gamelog
+        df = df[df["player"] == player_name]
+        df = df[df["round"] == self.round - 1]
+        print(df["reward"].max())
+        prev_round_score = df["reward"].max()
         if self.turn % self.cards_per_player == 0:
-            return self.calc_scores()[player_name]
-        return (self._nigiri_score(player_name) +
+            return self.calc_scores()[player_name] + prev_round_score
+
+        current_part = (self._nigiri_score(player_name) +
                 self._sashimi_score(player_name) +
-                self._tempura_score(player_name))
+                self._tempura_score(player_name) +
+                self._dumpling_score(player_name))
+        return current_part + prev_round_score
 
     def calc_scores(self):
         """
         This method calculates the score of all players.
-        This method should only be called at the end of a round.
+        This method should only be called at the last turn end of a round.
         :return: dict with player-name: scores for current round.
         """
         n_pudding = {p: self.count_cards(p, 'pudding') for p in self.players.keys()}
@@ -166,28 +182,28 @@ class Game(object):
             # handle simple scores
             score = (self._nigiri_score(player_name) +
                      self._sashimi_score(player_name) +
-                     self._tempura_score(player_name))
+                     self._tempura_score(player_name) +
+                     self._dumpling_score(player_name))
+
             # handle pudding score
-            if self.count_cards(player_name, 'pudding') == max(n_pudding.values()):
-                score += 6 / sum([_ == max(n_pudding.values()) for _ in n_pudding.values()])
-            if self.count_cards(player_name, 'pudding') == min(n_pudding.values()):
-                if len(self.players) > 2:
-                    score -= 6 / sum([_ == min(n_pudding.values()) for _ in n_pudding.values()])
+            if sum(n_pudding.values()) != 0:
+                if self.count_cards(player_name, 'pudding') == max(n_pudding.values()):
+                    score += 6 / sum([_ == max(n_pudding.values()) for _ in n_pudding.values()])
+                if self.count_cards(player_name, 'pudding') == min(n_pudding.values()):
+                    if len(self.players) > 2:
+                        score -= 6 / sum([_ == min(n_pudding.values()) for _ in n_pudding.values()])
+
             # handle best maki score
-            if self._maki_roll_count(player_name) == max(n_maxi.values()):
-                score += 6 / sum([_ == max(n_maxi) for _ in n_maxi])
-            # handle second best maki score
-            scores_without_best = [_ for _ in n_maxi.values() if _ != max(n_maxi.values())]
-            if len(scores_without_best) != 0:
-                if self._maki_roll_count(player_name) == max(scores_without_best):
-                    score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])
+            if self._maki_roll_count(player_name) != 0:
+                if self._maki_roll_count(player_name) == max(n_maxi.values()):
+                    score += 6 / sum([_ == max(n_maxi) for _ in n_maxi])
+                # handle second best maki score
+                scores_without_best = [_ for _ in n_maxi.values() if _ != max(n_maxi.values())]
+                if len(scores_without_best) != 0:
+                    if self._maki_roll_count(player_name) == max(scores_without_best):
+                        score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])
             score_dict[player_name] = float(score)
         return score_dict
-
-    def update_scores(self):
-        res = self.scores.copy()
-        res['round-{}'.format(self.round)] = self.calc_scores()
-        self.scores = res
 
     def count_cards(self, player_name, cardtype):
         return len([_ for _ in self.players[player_name].table if _.type == cardtype])
@@ -214,15 +230,14 @@ class Game(object):
         return nigiri_score
 
     def _dumpling_score(self, player_name):
-        # TODO: what if the player receives 6 of these cards?
-        score_map = {1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
+        score_map = {0:0, 1: 1, 2: 3, 3: 6, 4: 10, 5: 15}
         n_dumplings = self.count_cards(player_name, 'dumpling')
-        return score_map[n_dumplings]
+        return score_map[n_dumplings % 5] + np.floor(n_dumplings/5)*15
 
     def _tempura_score(self, player_name):
         n_tempura = self.count_cards(player_name, 'tempura')
-        return round(n_tempura/2)*5
+        return np.floor(n_tempura/2)*5
 
     def _sashimi_score(self, player_name):
         n_sashimi = self.count_cards(player_name, 'sashimi')
-        return round(n_sashimi/3)*10
+        return np.floor(n_sashimi/3)*10

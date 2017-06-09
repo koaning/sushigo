@@ -8,17 +8,17 @@ def test_after_turn_hands_exchange_two_player():
     p2 = Player("sharon")
     game = Game(deck_constructor=StandardDeck, agents=[p1, p2], n_rounds=2)
     print(game.scores)
-    scores0 = game.scores
+    scores0 = game.end_results()
     game.play_round()
-    scores1 = game.scores
+    scores1 = game.end_results()
     game.play_round()
-    scores2 = game.scores
+    scores2 = game.end_results()
     print(scores1)
     print(scores2)
-    assert scores0['round-1']['bob'] == 0.0
-    assert scores1['round-2']['bob'] == 0.0
-    assert scores2['round-2']['bob'] > 0.0
-    assert scores2['round-2']['sharon'] > 0.0
+    assert scores0['bob'] == 0.0
+    assert scores1['bob'] > 0.0
+    assert scores2['bob'] > 0.0
+    assert scores2['sharon'] > 0.0
 
 
 def test_after_turn_hands_exchange_three_player():
@@ -26,18 +26,17 @@ def test_after_turn_hands_exchange_three_player():
     p2 = Player("sharon")
     p3 = Player("alice")
     game = Game(deck_constructor=InfiniDeck, agents=[p1, p2, p3], n_rounds=3)
-    scores0 = game.scores
+    scores0 = game.end_results()
     game.play_round()
-    scores1 = game.scores
+    scores1 = game.end_results()
     game.play_round()
-    scores2 = game.scores
+    scores2 = game.end_results()
     game.play_round()
-    scores3 = game.scores
-    print(scores3)
-    assert scores3['round-1']['bob'] == scores1['round-1']['bob']
-    assert scores3['round-2']['alice'] > scores0['round-2']['alice']
-    assert scores3['round-2']['bob'] > scores1['round-2']['bob']
-    assert scores3['round-2']['sharon'] > scores1['round-2']['alice']
+    scores3 = game.end_results()
+    assert scores3['bob'] > scores1['bob']
+    assert scores3['alice'] > scores0['alice']
+    assert scores3['bob'] > scores1['bob']
+    assert scores3['sharon'] > scores1['sharon']
 
 
 def test_certain_cards_carry_no_rewards_within_rounds():

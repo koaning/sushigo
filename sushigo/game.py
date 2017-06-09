@@ -53,10 +53,6 @@ class Game(object):
             'datetime': str(datetime.datetime.now())[:19]
         })
         df = pd.concat([self.gamelog, log], ignore_index=True).sort_values(['player', 'turn'])
-        # df['reward_cs'] = (df
-        #                    .groupby(['player'])['reward']
-        #                    .apply(lambda _: _.shift()))
-        # df['reward_cs'] = (df['reward_cs']).fillna(0)
         self.gamelog = df
 
     def play_turn(self):
@@ -137,6 +133,16 @@ class Game(object):
         self.reset_game()
         return self.gamelog
 
+    def end_results(self):
+        output = {}
+        this_game_log = self.gamelog[self.gamelog['game_id'] == self.game_id]
+        this_game_log = this_game_log[this_game_log['turn'] == this_game_log['turn'].max()]
+        print(this_game_log)
+        for player in self.players:
+            player_log = this_game_log[this_game_log['player'] == player]
+            output[player] = player_log['reward'].iloc[-1]
+        return output
+
     def get_action_space(self, player_name):
         return [_.type for _ in self.players[player_name].hand]
 
@@ -158,7 +164,6 @@ class Game(object):
         df = self.gamelog
         df = df[df["player"] == player_name]
         df = df[df["round"] == self.round - 1]
-        print(df["reward"].max())
         prev_round_score = df["reward"].max()
         if self.turn % self.cards_per_player == 0:
             return self.calc_scores()[player_name] + prev_round_score
@@ -203,6 +208,7 @@ class Game(object):
                     if self._maki_roll_count(player_name) == max(scores_without_best):
                         score += 3 / sum([_ == max(scores_without_best) for _ in scores_without_best])
             score_dict[player_name] = float(score)
+            self.scores["round-{}".format(self.round)][player_name] = float(score)
         return score_dict
 
     def count_cards(self, player_name, cardtype):

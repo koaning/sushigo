@@ -61,13 +61,19 @@ def test_certain_cards_carry_rewards_at_end_of_round():
     p1 = Player("bob")
     p2 = Player("sharon")
     # create a deck with no cards that are worth points during a round
-    d = Deck(egg=0, salmon=0, squid=0, tempura=0, sashimi=0, dumpling=0, maki3=100)
+    d = Deck(egg=0, salmon=0, squid=0, tempura=0,
+             sashimi=0, dumpling=0, pudding=0,
+             wasabi=0, maki1=0, maki2=0, maki3=100)
     assert all([(_.type != 'tempura') for _ in d.cards])
-    g = Game(deck_constructor=lambda: d, agents=[p1, p2])
+    g = Game(deck_constructor=lambda: d, agents=[p1, p2], cards_per_player=10)
     g.play_round()
     g.play_round()
     print(g.gamelog)
-    assert g.gamelog.shape[0] == 4
+    assert g.gamelog.shape[0] == 42
     assert g.gamelog['reward'][0] == 0.0
     assert g.gamelog['reward'][1] == 0.0
+    assert g.gamelog['reward'][2] == 0.0
+    assert g.gamelog['reward'][3] == 0.0
+    assert g.gamelog['reward_cs'].iloc[-2] == 3.0
+    assert g.gamelog['reward_cs'].iloc[-1] == 6.0
     assert False

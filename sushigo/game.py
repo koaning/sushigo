@@ -6,8 +6,6 @@ import pprint
 
 pp = pprint.PrettyPrinter(indent=2)
 
-# logging -
-# game_id, round, turn, player, action, score, datetime
 
 class Game(object):
     def __init__(self, agents, deck_constructor=None, cards_per_player=10, n_rounds=3, verbose=False):
@@ -25,13 +23,14 @@ class Game(object):
         self.players = {_.name: _ for _ in agents}
         self.game_id = str(uuid.uuid4())[:6]
         self.gamelog = pd.DataFrame({
-            "game_id":self.game_id,
-            "round":0,
-            "turn":0,
+            "game_id": self.game_id,
+            "round": 0,
+            "turn": 0,
             "player": list(self.players.keys()),
-            "action":'',
-            "reward":0,
-            "datetime":str(datetime.datetime.now())})
+            "action": '',
+            "reward": 0,
+            "reward_cs": 0,
+            "datetime": str(datetime.datetime.now())})
         self.scores = {"round-{}".format(i): {_.name: 0. for _ in agents} for i in range(1, n_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = self.deck.cards[:cards_per_player]
@@ -40,7 +39,7 @@ class Game(object):
     def log_user_action(self, player_name, action):
         """
         This method appends to the log dataframe found in self.gamelog 
-        :param player: player object, not player-name 
+        :param player_name: player object, not player-name 
         :param action: action, card type string 
         """
         log = pd.DataFrame({
@@ -53,7 +52,7 @@ class Game(object):
             'datetime': str(datetime.datetime.now())
         })
         df = pd.concat([self.gamelog, log], ignore_index=True).sort_values(['player', 'turn'])
-        df['reward'] = df.groupby(['player'])['reward'].apply(lambda _: _.cumsum())
+        df['reward_cs'] = df.groupby(['player'])['reward'].apply(lambda _: _.cumsum())
         self.gamelog = df
 
     def play_turn(self):
@@ -63,8 +62,8 @@ class Game(object):
         for player_name in self.players.keys():
             observation = self.get_observation(player_name)
             action_space = self.get_action_space(player_name)
-            last_log_player = self.gamelog[self.gamelog['player'] == player_name]
-            reward = last_log_player['reward'].iloc[-1]
+            last_log_player = self.gamelog[self.gamelog['player'] == player_name].iloc[-1]
+            reward = last_log_player['reward']
             player = self.players[player_name]
 
             # the player selects a type of card

@@ -95,9 +95,12 @@ class Game(object):
         self.turn += 1
 
         if self.verbose:
-            res = self.scores.copy()
-            res["turn"] = self.turn
-            pp.pprint(res)
+            info = {}
+            info['game'] = self.game_id
+            info['round'] = self.round
+            info['turn'] = self.turn
+            info['table'] = {_: [c.type for c in self.players[_].table] for _ in self.players.keys()}
+            pprint.pprint(info, width=2)
 
     def reset_game(self):
         self.turn = 0
@@ -137,7 +140,6 @@ class Game(object):
         output = {}
         this_game_log = self.gamelog[self.gamelog['game_id'] == self.game_id]
         this_game_log = this_game_log[this_game_log['turn'] == this_game_log['turn'].max()]
-        print(this_game_log)
         for player in self.players:
             player_log = this_game_log[this_game_log['player'] == player]
             output[player] = player_log['reward'].iloc[-1]

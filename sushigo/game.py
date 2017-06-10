@@ -125,8 +125,8 @@ class Game(object):
 
     def simulate_game(self):
         """
-        This method simulates a single game and resets it. 
-        :return:    
+        This method simulates a single game and resets it.
+        :return:
         """
         for game in range(self.max_rounds):
             self.play_round()
@@ -155,9 +155,9 @@ class Game(object):
 
     def calc_reward(self, player_name):
         """
-        This method calculates the direct reward of a player at the 
-        time of the method call. This method can be called whenever 
-        and will fall back to self.calc_scores if it is the end of 
+        This method calculates the direct reward of a player at the
+        time of the method call. This method can be called whenever
+        and will fall back to self.calc_scores if it is the end of
         the round.
         :return: float
         """
@@ -169,9 +169,9 @@ class Game(object):
             return self.calc_scores()[player_name] + prev_round_score
 
         current_part = (self._nigiri_score(player_name) +
-                self._sashimi_score(player_name) +
-                self._tempura_score(player_name) +
-                self._dumpling_score(player_name))
+                        self._sashimi_score(player_name) +
+                        self._tempura_score(player_name) +
+                        self._dumpling_score(player_name))
         return current_part + prev_round_score
 
     def calc_scores(self):

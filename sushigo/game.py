@@ -128,7 +128,7 @@ class Game(object):
         This method simulates a single game and resets it.
         :return:
         """
-        for game in range(self.max_rounds):
+        for round in range(self.max_rounds):
             self.play_round()
         self.reset_game()
         return self.gamelog

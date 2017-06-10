@@ -100,6 +100,7 @@ class Game(object):
             info['round'] = self.round
             info['turn'] = self.turn
             info['table'] = {_: [c.type for c in self.players[_].table] for _ in self.players.keys()}
+            info['points'] =  {_: self.calc_reward(_) for _ in self.players.keys()}
             pprint.pprint(info, width=2)
 
     def reset_game(self):

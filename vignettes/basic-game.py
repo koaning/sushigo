@@ -5,7 +5,7 @@ p2 = sushigo.player.Player()
 
 players = [p1,p2]
 game = sushigo.game.Game(players, verbose=True)
-scores = game.play_full_game()
+game.simulate_game()
 print(game.scores)
 print(game.gamelog)
 

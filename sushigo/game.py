@@ -122,6 +122,11 @@ class Game(object):
                     raise RuntimeError("Deck needs more cards for this many rounds of plays")
                 self.players[name].hand = self.deck.cards[:self.cards_per_player]
                 self.deck.cards = self.deck.cards[self.cards_per_player:]
+    def play_full_game(self):
+        for game in range(self.max_rounds):
+            self.play_round()
+        scores = self.calc_scores().copy()
+        return scores
 
     def simulate_game(self):
         """

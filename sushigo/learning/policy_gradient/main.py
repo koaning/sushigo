@@ -3,8 +3,7 @@ import numpy as np
 np.random.seed(123)
 
 from sushigo.deck import ALL_CARDTYPES
-from sushigo.learning.evolution.players.simple_player import Simple_player
-from sushigo.learning.evolution.utils import is_winner
+from sushigo.learning.policy_gradient.players.simple_player import Simple_player
 
 N_cards = len(ALL_CARDTYPES)
 

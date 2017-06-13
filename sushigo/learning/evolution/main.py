@@ -24,7 +24,7 @@ for trial in range(trials):
         p2 = Simple_player(weights = trial_weights, name="ES_player01")
 
         game = sushigo.game.Game([p1, p2], verbose=False)
-        scores = game.play_full_game()
+        scores = game.simulate_game()
         trial_points += is_winner(scores, p2.name)
 
     if trial_points > best_trial_points:

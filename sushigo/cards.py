@@ -108,8 +108,17 @@ class NigiriCard(Card):
 
 class MakiCard(Card):
 
+    def __init__(self, value):
+        self.value = value
+
+    @property
+    def name(self):
+        return self.value
+
     @classmethod
     def score(cls, player_cards, end_game, end_round):
+        if not end_round:
+            return zero_score(player_cards)
         maki_points = count_values(player_cards, card_type=cls)
         max_points = max(maki_points.values())
         scores = split_score(maki_points, target_count=max_points, score=6)

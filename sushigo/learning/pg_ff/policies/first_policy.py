@@ -17,7 +17,7 @@ class Policy(nn.Module):
         self.rewards = []
 
     def forward(self, x):
-        x = F.relu(self.affine1(x))
+        x = F.tanh(self.affine1(x))
         action_scores = self.affine2(x)
         return F.softmax(action_scores)
 
@@ -29,16 +29,15 @@ def select_action(state, policy,allowed):
     allowed.requires_grad = False
     allowed_probs = torch.mul(probs,allowed)
 
+    # pol_print = allowed_probs.data.numpy()/np.sum(allowed_probs.data.numpy())
+    # print('%5.2f'*11%(tuple(pol_print[0])))
+
     action = allowed_probs.multinomial()
     policy.saved_actions.append(action)
     return action.data.numpy()[0][0]
 
-def finish_game(policy, gamma, optimizer):
-    R = 0
-    rewards = []
-    for r in policy.rewards[::-1]:
-        R = r + gamma * R
-        rewards.insert(0, R)
+def finish_game(policy, optimizer):
+    rewards = policy.rewards + [0]
     rewards = torch.Tensor(rewards)
     rewards = (rewards - rewards.mean()) / (rewards.std() + np.finfo(np.float32).eps)
 

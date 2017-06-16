@@ -4,7 +4,7 @@ from sushigo.player import Player
 import numpy as np
 from sushigo.deck import ALL_CARDTYPES
 from collections import OrderedDict  #https://stackoverflow.com/questions/7961363/removing-duplicates-in-lists
-from sushigo.learning.policy_gradient.policies.first_policy import select_action
+from sushigo.learning.pg_rnn.policies.rnn_policy import select_action
 
 NUM_CARDS = len(ALL_CARDTYPES)
 CARDS_IDX = {card:i for i,card in enumerate(ALL_CARDTYPES)}
@@ -14,9 +14,10 @@ class Pg_player(Player):
         super(Pg_player, self).__init__()
         self.policy = policy
         self.name = name
+        self.prev_reward = None
 
     def act(self, reward, observation=None, action_space=None):
-        self.policy.rewards.append(reward) #Append is one-off because action returns function
+        self.append_reward(reward)
         state = self.obs_to_state(observation)
         allowed_actions = self.action_vec(action_space)
         action = select_action(state=state,policy=self.policy,allowed=allowed_actions)
@@ -38,3 +39,8 @@ class Pg_player(Player):
             actions[CARDS_IDX[card]] += 1
         actions = list(map(lambda x: min(x,1), actions))
         return actions
+
+    def append_reward(self,reward):
+        if self.prev_reward is not None:
+            self.policy.rewards.append(reward-self.prev_reward)
+        self.prev_reward = reward

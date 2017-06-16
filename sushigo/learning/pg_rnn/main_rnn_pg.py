@@ -4,13 +4,13 @@ import torch
 import torch.optim as optim
 
 from sushigo.deck import ALL_CARDTYPES
-from sushigo.learning.policy_gradient.players.simple_player import Simple_player
-from sushigo.learning.policy_gradient.players.pg_player import Pg_player
-from sushigo.learning.policy_gradient.policies.first_policy import Policy, select_action, finish_game
+from sushigo.learning.pg_ff.players.simple_player import Simple_player
+from sushigo.learning.pg_rnn.players.pg_player import Pg_player
+from sushigo.learning.pg_rnn.policies.rnn_policy import Policy, finish_game
 from sushigo.game import Game
 
 #Set up policy
-policy = Policy()
+policy = Policy('LSTM',22,20,1,11)
 torch.manual_seed(123)
 
 #Parameters
@@ -35,4 +35,5 @@ for n in range(100):
     ewma = alpha*ewma + (1-alpha)*int(win)
     print('ewma win ratio %5.3f'%ewma)
 
-    finish_game(p1.policy, gamma=gamma, optimizer=optimizer)
+    finish_game(policy, gamma=gamma, optimizer=optimizer)
+    p1.prev_reward = None

@@ -15,6 +15,13 @@ def count_cards(player_cards, card_type):
     }
 
 
+def count_values(player_cards, card_type):
+    return {
+        player: len([card.value for card in cards if isinstance(card, card_type)])
+        for player, cards in player_cards.items()
+    }
+
+
 def zero_score(player_cards):
     return {player: 0 for player in player_cards.items()}
 
@@ -97,6 +104,20 @@ class NigiriCard(Card):
                         score += card.value
             result[player] = score
         return result
+
+
+class MakiCard(Card):
+
+    @classmethod
+    def score(cls, player_cards, end_game, end_round):
+        maki_points = count_values(player_cards, card_type=cls)
+        max_points = max(maki_points.values())
+        scores = split_score(maki_points, target_count=max_points, score=6)
+        if len([score for score in scores if score > 0]) > 1:
+            return scores
+        sub_points = max(points for points in maki_points if points < max_points)
+        sub_scores = split_score(maki_points, target_count=sub_points, score=3)
+        return sum_scores(scores, sub_scores)
 
 
 class WasabiCard(Card):

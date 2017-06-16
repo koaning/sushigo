@@ -16,12 +16,12 @@ class Deck:
 
     @classmethod
     def create(cls, card_types, card_counts):
-        if len(card_types) != len(card_counts):
-            raise ValueError('card_counts must have the same length as card_types')
         return cls(*cls.create_card_list(card_types, card_counts))
 
     @staticmethod
     def create_card_list(card_types, card_counts):
+        if len(card_types) != len(card_counts):
+            raise ValueError('card_counts must have the same length as card_types')
         return [copy(card_type) for card_type, count in zip(card_types, card_counts) for _ in range(count)]
 
     def reset(self):

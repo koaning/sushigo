@@ -25,6 +25,9 @@ def select_action(state, policy,allowed):
     state = torch.FloatTensor(state).unsqueeze(0)
     probs = policy(Variable(state))
 
+    # pol_print = probs.data.numpy()/np.sum(probs.data.numpy())
+    # print('%5.2f'*11%(tuple(pol_print[0])))
+
     allowed = Variable(torch.FloatTensor(allowed).unsqueeze(0))
     allowed.requires_grad = False
     allowed_probs = torch.mul(probs,allowed)

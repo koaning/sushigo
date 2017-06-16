@@ -28,7 +28,7 @@ p2 = Simple_player(weights=[1/N_cards]*N_cards,name="SIMPLE_player01")
 
 ewma = 0.5
 alpha = 0.95
-for n in range(100):
+for n in range(50):
     game = Game([p1,p2],verbose=False)
     game.play_full_game()
     win = game.calc_reward(p1.name) > game.calc_reward(p2.name)

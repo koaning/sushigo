@@ -7,6 +7,7 @@ from sushigo.deck import ALL_CARDTYPES
 from sushigo.learning.pg_ff.players.simple_player import Simple_player
 from sushigo.learning.pg_rnn.players.pg_player import Pg_player
 from sushigo.learning.pg_rnn.policies.rnn_policy import Policy, finish_game
+from sushigo.learning.pg_rnn.util.util import adjust_learning_rate
 from sushigo.game import Game
 
 #Set up policy
@@ -18,7 +19,8 @@ N_cards = len(ALL_CARDTYPES)
 gamma = 0.99
 
 #Set up optim
-optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+lr = 1e-2
+optimizer = optim.Adam(policy.parameters(), lr=lr)
 log_interval = 10
 
 
@@ -33,7 +35,8 @@ for n in range(100):
     game.play_full_game()
     win = game.calc_reward(p1.name) > game.calc_reward(p2.name)
     ewma = alpha*ewma + (1-alpha)*int(win)
-    print('ewma win ratio %5.3f'%ewma)
+    print('At %3i ewma win ratio %5.3f'%(n,ewma))
 
     finish_game(policy, gamma=gamma, optimizer=optimizer)
     p1.prev_reward = None
+    optimizer = adjust_learning_rate(optimizer,n,lr,30)

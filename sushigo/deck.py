@@ -1,8 +1,10 @@
 from copy import copy, deepcopy
 from random import shuffle, choice
+from numpy import infty
 
 from sushigo.cards import Card, MakiCard, SashimiCard, WasabiCard, DumplingCard, PuddingCard, NigiriCard, TempuraCard
 from sushigo.cards import sum_scores
+
 
 class Deck:
 
@@ -16,7 +18,11 @@ class Deck:
 
     @property
     def card_types(self):
-        return set(card.__class__ for card in self.cards)
+        return set(card.__class__ for card in self.initial_cards)
+
+    @property
+    def cards_left(self):
+        return len(self.cards)
 
     @classmethod
     def create(cls, card_types, card_counts):
@@ -35,7 +41,7 @@ class Deck:
     def scoring_function(self):
         def scorer(player_cards, end_game, end_round):
             return sum_scores(*[
-                card_type.score(player_cards, end_game, end_round)
+                card_type.score(player_cards, end_game=end_game, end_round=end_round)
                 for card_type in self.card_types
             ])
         return scorer
@@ -51,11 +57,15 @@ class Deck:
 
 class InfiniDeck(Deck):
 
+    @property
+    def cards_left(self):
+        return infty
+
     def reset(self):
         pass
 
     def __next__(self):
-        return choice(self.initial_cards)
+        return copy(choice(self.initial_cards))
 
 
 class StandardDeck(Deck):

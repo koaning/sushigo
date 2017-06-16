@@ -3,6 +3,8 @@ from math import floor
 
 
 def sum_scores(*player_scores):
+    if len(player_scores) == 0:
+        return {}
     return {
         player: sum(player_score[player] for player_score in player_scores)
         for player in player_scores[0].keys()
@@ -17,13 +19,13 @@ def count_cards(player_cards, card_type):
 
 def count_values(player_cards, card_type):
     return {
-        player: len([card.value for card in cards if isinstance(card, card_type)])
+        player: sum([card.value for card in cards if isinstance(card, card_type)])
         for player, cards in player_cards.items()
     }
 
 
 def zero_score(player_cards):
-    return {player: 0 for player in player_cards.items()}
+    return {player: 0 for player in player_cards.keys()}
 
 
 def split_score(card_counts, target_count, score: int):
@@ -60,7 +62,7 @@ class CollectionCard(Card):
     def score(cls, player_cards, end_game, end_round):
         return {
             player: floor(n_cards/cls.set_size)*cls.set_score
-            for player, n_cards in count_cards(player_cards, card_type=cls)
+            for player, n_cards in count_cards(player_cards, card_type=cls).items()
         }
 
 
@@ -121,10 +123,14 @@ class MakiCard(Card):
             return zero_score(player_cards)
         maki_points = count_values(player_cards, card_type=cls)
         max_points = max(maki_points.values())
+        if max_points == 0:
+            return zero_score(player_cards)
         scores = split_score(maki_points, target_count=max_points, score=6)
-        if len([score for score in scores if score > 0]) > 1:
+        if len([score for score in scores.values() if score > 0]) > 1:
             return scores
-        sub_points = max(points for points in maki_points if points < max_points)
+        sub_points = max(points for points in maki_points.values() if points < max_points)
+        if sub_points == 0:
+            return scores
         sub_scores = split_score(maki_points, target_count=sub_points, score=3)
         return sum_scores(scores, sub_scores)
 
@@ -143,7 +149,7 @@ class DumplingCard(Card):
     def score(cls, player_cards, end_game, end_round):
         return {
             player: cls.scores[n_cards] if n_cards in cls.scores else 15
-            for player, n_cards in count_cards(player_cards, card_type=cls)
+            for player, n_cards in count_cards(player_cards, card_type=cls).items()
         }
 
 

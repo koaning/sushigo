@@ -43,12 +43,12 @@ def test_after_turn_hands_exchange_three_player():
     p1 = Player("bob")
     p2 = Player("sharon")
     p3 = Player("alice")
-    game = Game(deck=StandardDeck(), agents=[p1, p2, p3], cards_per_player=10)
+    game = Game(deck=StandardDeck(), agents=[p1, p2, p3], cards_per_player=8)
     p1_hand_before, p2_hand_before, p3_hand_before = p1.hand, p2.hand, p3.hand
     game.play_turn()
-    assert len(p1.hand) == 9
-    assert len(p2.hand) == 9
-    assert len(p3.hand) == 9
+    assert len(p1.hand) == 7
+    assert len(p2.hand) == 7
+    assert len(p3.hand) == 7
     assert all([(_ in p3_hand_before) for _ in p1.hand])
     assert all([(_ in p2_hand_before) for _ in p3.hand])
     assert all([(_ in p1_hand_before) for _ in p2.hand])

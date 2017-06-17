@@ -31,5 +31,5 @@ def simulate(n_games = 10):
 # let's do a super naive random search
 for i in range(10):
     random.shuffle(POSSIBLE_CARDS)
-    score = simulate(POSSIBLE_CARDS, 10)
+    score = simulate(10)
     print("card:{}\nscore:{}".format(POSSIBLE_CARDS, score))

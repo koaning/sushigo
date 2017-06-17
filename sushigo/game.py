@@ -87,8 +87,7 @@ class Game(object):
         # if this is the last turn of the round we want to remove the table
         if self.turn % self.cards_per_player == 0:
             self.calc_scores()
-            for name in self.players.keys():
-                self.players[name].table = []
+            self.reset_table()
         # the very last thing is to update the turn
         self.turn += 1
 
@@ -101,11 +100,18 @@ class Game(object):
             info['points'] =  {_: self.calc_points(_) for _ in self.players.keys()}
             pprint.pprint(info, width=2)
 
+    def reset_table(self):
+        """Clears the table. Persistent cards remain."""
+        for player in self.players.values():
+            player.table = [card for card in player.table if card.persistent]
+
     def reset_game(self):
         self.turn = 0
         self.round = 1
         self.game_id = str(uuid.uuid4())[:6]
         self.deck.reset()
+        for player in self.players.values():
+            player.table = []
         self.scores = {"round-{}".format(i): {_: 0. for _ in self.players.keys()} for i in range(1, self.max_rounds + 1)}
         for name in self.players.keys():
             self.players[name].hand = list(islice(self.deck, self.cards_per_player))

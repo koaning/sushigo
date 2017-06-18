@@ -166,7 +166,7 @@ class Game(object):
     def calc_points(self, player_name):
         """
         This method calculates the direct points of a player at the
-        time of the method call. 
+        time of the method call.
         :return: float
         """
         df = self.gamelog
@@ -177,8 +177,8 @@ class Game(object):
 
     def did_player_win(self, player_name):
         """
-        :param player_name (str): name of the player in the game 
-        :return (bool): True or False 
+        :param player_name (str): name of the player in the game
+        :return (bool): True or False
         """
         df = self.gamelog
         df = df[df['turn'] == self.max_rounds * self.cards_per_player]

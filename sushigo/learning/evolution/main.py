@@ -1,5 +1,6 @@
 import sushigo
 import numpy as np
+np.random.seed(123)
 
 from sushigo.deck import ALL_CARDTYPES
 from sushigo.learning.evolution.players.simple_player import Simple_player
@@ -18,14 +19,14 @@ for trial in range(trials):
     trial_points = 0
 
     trial_weights = np.random.randint(0,max_weight,size=(N_cards,))
-    for game in range(games_per_trial):
+    for _ in range(games_per_trial):
 
         p1 = Simple_player(weights=[26, 56, 54, 30, 77, 53, 53, 96, 78,  3, 77],name="ES_player02")
         p2 = Simple_player(weights = trial_weights, name="ES_player01")
 
         game = sushigo.game.Game([p1, p2], verbose=False)
-        scores = game.simulate_game()
-        trial_points += is_winner(scores, p2.name)
+        scores = game.play_full_game()
+        trial_points += 2*int(game.calc_reward(p2.name)>game.calc_reward(p1.name))-1
 
     if trial_points > best_trial_points:
         best_trial_points = trial_points
